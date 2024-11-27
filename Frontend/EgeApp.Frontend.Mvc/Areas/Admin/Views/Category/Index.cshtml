@@ -1,0 +1,128 @@
+﻿@model EgeApp.Frontend.Mvc.Models.Category.CategoryIndexViewModel
+
+@{
+    ViewData["Title"] = "Kategoriler";
+    ViewData["PageHeader"] = "Kategoriler";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Ana Kategoriler</h3>
+                <div class="card-tools">
+                    <a asp-area="Admin" asp-controller="Category" asp-action="Create" asp-route-isMainCategory="true" 
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Ana Kategori Ekle
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ad</th>
+                            <th>Açıklama</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.MainCategories)
+                        {
+                            <tr>
+                                <td>@category.Name</td>
+                                <td>@category.Description</td>
+                                <td>
+                                    <input type="checkbox" id="isActive-@category.Id" 
+                                           @(category.IsActive ? "checked" : "")
+                                           onchange="changeCategoryStatus(@category.Id)">
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-id="@category.Id"
+                                           class="btn btn-warning btn-sm">Düzenle</a>
+                                        <a href="javascript:void(0);" onclick="deleteCategory(@category.Id)"
+                                           class="btn btn-danger btn-sm">Sil</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3 class="card-title">Alt Kategoriler</h3>
+                <div class="card-tools">
+                    <a asp-area="Admin" asp-controller="Category" asp-action="Create" asp-route-isMainCategory="false" 
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Alt Kategori Ekle
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ad</th>
+                            <th>Üst Kategori</th>
+                            <th>Açıklama</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.SubCategories)
+                        {
+                            <tr>
+                                <td>@category.Name</td>
+                                <td>
+                                </td>
+                                <td>@category.Description</td>
+                                <td>
+                                    <input type="checkbox" id="isActive-@category.Id" 
+                                           @(category.IsActive ? "checked" : "")
+                                           onchange="changeCategoryStatus(@category.Id)">
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-id="@category.Id"
+                                           class="btn btn-warning btn-sm">Düzenle</a>
+                                        <a href="javascript:void(0);" onclick="deleteCategory(@category.Id)"
+                                           class="btn btn-danger btn-sm">Sil</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function changeCategoryStatus(id) {
+            $.ajax({
+                url: '@Url.Action("UpdateIsActive", "Category")/' + id,
+                type: 'POST',
+                success: function(result) {
+                    // Handle success
+                },
+                error: function() {
+                    // Handle error
+                }
+            });
+        }
+
+        function deleteCategory(id) {
+            if (confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) {
+                window.location.href = '@Url.Action("Delete", "Category")/' + id;
+            }
+        }
+    </script>
+}
