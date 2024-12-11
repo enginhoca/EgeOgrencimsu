@@ -6,9 +6,12 @@ using Newtonsoft.Json;
 using EgeApp.Frontend.Mvc.Data.Entities;
 using EgeApp.Frontend.Mvc.Models.Cart;
 using EgeApp.Frontend.Mvc.Services;
+using EgeApp.Backend.Shared.Dtos.CartDtos;
+
 
 namespace EgeApp.Frontend.Mvc.Controllers
 {
+    
     public class CartController : Controller
     {
         private readonly UserManager<AppUser> _userManager;
@@ -19,21 +22,54 @@ namespace EgeApp.Frontend.Mvc.Controllers
             _userManager = userManager;
             _notyfService = notyfService;
         }
+        private CartViewModel MapToViewModel(CartDto cartDto)
+        {
+            if (cartDto == null) return new CartViewModel();
 
+            return new CartViewModel
+            {
+                Id = cartDto.Id,
+                CreatedDate = cartDto.CreatedDate,
+                UserId = cartDto.UserId,
+                CartItems = cartDto.CartItems.Select(item => new CartItemViewModel
+                {
+                    Id = item.ProductId,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    ImageUrl = item.ImageUrl,
+                    Price = item.Price,
+                    Quantity = item.Quantity
+                }).ToList()
+            };
+        }
+
+
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
-            var userId = await _userManager.GetUserIdAsync(user);
+            string userId = "3";
+
+            // Kullanıcının oturum açıp açmadığını kontrol edin
+            if (User.Identity.IsAuthenticated)
+            {
+                // Kullanıcı kimliği alın
+                userId = await _userManager.GetUserIdAsync(await _userManager.GetUserAsync(User));
+            }
+
+            // Sepeti alın, kullanıcı ID yoksa anonim kullanıcı için de bir sepet alınabilir
             var cartResult = await CartService.GetCartAsync(userId);
 
             if (!cartResult.IsSucceeded)
             {
-                return RedirectToAction("Error", "Home");
+                _notyfService.Error("Sepet yüklenirken bir hata oluştu.");
+                return RedirectToAction("Index", "Home");
             }
-            var cart = cartResult.Data;
-            ViewBag.CountOfItems = cart.CountOfItem;
-            return View(cart);
+
+            // DTO'dan ViewModel'e dönüştür
+            var cartViewModel = MapToViewModel(cartResult.Data);
+            return View(cartViewModel);
         }
+
 
         public async Task<IActionResult> AddToCartAfterLogin()
         {
@@ -54,6 +90,9 @@ namespace EgeApp.Frontend.Mvc.Controllers
             _notyfService.Error("Bir sorun oluştu, yeniden deneyiniz!");
             return RedirectToAction("Index", "Home");
         }
+
+
+
         public async Task<IActionResult> AddToCart(AddToCartViewModel model)
         {
             if (!User.Identity.IsAuthenticated)
@@ -99,6 +138,7 @@ namespace EgeApp.Frontend.Mvc.Controllers
             return RedirectToAction("Index");
 
         }
+        
     }
 }
 

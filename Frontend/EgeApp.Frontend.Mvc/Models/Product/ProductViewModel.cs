@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
 using EgeApp.Frontend.Mvc.Models.Category;
 
 namespace EgeApp.Frontend.Mvc.Models.Product
@@ -10,65 +13,66 @@ namespace EgeApp.Frontend.Mvc.Models.Product
         public int Id { get; set; }
 
         [JsonPropertyName("name")]
+        [Required(ErrorMessage = "Ürün adı gereklidir.")]
         public string Name { get; set; }
 
-        [JsonPropertyName("isActive")]
-        public bool IsActive { get; set; }
-
-        [JsonPropertyName("url")]
-        public string Url { get; set; }
-
-        [JsonPropertyName("properties")]
-        public string Properties { get; set; }
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
 
         [JsonPropertyName("price")]
+        [Required(ErrorMessage = "Fiyat gereklidir.")]
         public decimal Price { get; set; }
 
         [JsonPropertyName("discountedPrice")]
         public decimal? DiscountedPrice { get; set; }
 
+        [JsonPropertyName("salesCount")]
+        public int SalesCount { get; set; }
+
         [JsonPropertyName("imageUrl")]
         public string ImageUrl { get; set; }
 
-        [JsonPropertyName("mainImage")]
-        public string MainImage { get; set; }
+        [Display(Name = "Ürün Resmi")]
+        public IFormFile Image { get; set; } // Fotoğraf yükleme özelliği
 
-        [JsonPropertyName("isHome")]
-        public bool IsHome { get; set; }
-
-        [JsonPropertyName("categoryId")]
-        public int CategoryId { get; set; }
-
-        [JsonPropertyName("category")]
-        public CategoryViewModel Category { get; set; }
-
-        // Medikal ürünler için özel alanlar
-        [JsonPropertyName("stockCode")]
-        public string StockCode { get; set; }
-
-        [JsonPropertyName("warrantyPeriod")]
-        public string WarrantyPeriod { get; set; }
+        [JsonPropertyName("isActive")]
+        public bool IsActive { get; set; }
 
         [JsonPropertyName("isDiscounted")]
         public bool IsDiscounted { get; set; }
 
         [JsonPropertyName("isFreeShipping")]
-        public bool IsFreeShipping { get; set; }
+        public bool? IsFreeShipping { get; set; }
 
         [JsonPropertyName("isSpecialProduct")]
-        public bool IsSpecialProduct { get; set; }
+        public bool? IsSpecialProduct { get; set; }
 
         [JsonPropertyName("isSameDayShipping")]
-        public bool IsSameDayShipping { get; set; }
+        public bool? IsSameDayShipping { get; set; }
 
-        [JsonPropertyName("isLimitedStock")]
-        public bool IsLimitedStock { get; set; }
+        [JsonPropertyName("categoryId")]
+        [Required(ErrorMessage = "Kategori seçilmelidir.")]
+        public int CategoryId { get; set; }
 
-        [JsonPropertyName("productDescription")]
-        public string ProductDescription { get; set; }
+        [JsonPropertyName("url")]
+        public string? Url { get; set; }
 
-        // İlişkili ürünler listesi
-        [JsonPropertyName("relatedProducts")]
-        public List<ProductViewModel> RelatedProducts { get; set; } // İlişkili ürünler
+        [JsonPropertyName("brand")]
+        public string? Brand { get; set; }
+
+        [JsonPropertyName("isHome")]
+        public bool IsHome { get; set; }
+
+        [JsonPropertyName("createdDate")]
+        public DateTime CreatedDate { get; set; }
+
+        [JsonPropertyName("modifiedDate")]
+        public DateTime ModifiedDate { get; set; }
+
+        [JsonPropertyName("category")]
+        public CategoryViewModel Category { get; set; }
+
+        [JsonPropertyName("categoryList")]
+        public IEnumerable<CategoryViewModel>? CategoryList { get; set; }
     }
 }

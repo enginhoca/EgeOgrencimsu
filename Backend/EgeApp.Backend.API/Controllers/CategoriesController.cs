@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using EgeApp.Backend.Business.Abstract;
 using EgeApp.Backend.Shared.Dtos.CategoryDtos;
 using EgeApp.Backend.Shared.Helpers;
+using System.Linq.Expressions;
+using EgeApp.Backend.Models;
+using EgeApp.Backend.Shared.Dtos.ResponseDtos;
 
 namespace EgeApp.Backend.API.Controllers
 {
@@ -10,24 +13,17 @@ namespace EgeApp.Backend.API.Controllers
     public class CategoriesController : CustomControllerBase
     {
         private readonly ICategoryService _categoryService;
+
         public CategoriesController(ICategoryService categoryService)
         {
             _categoryService = categoryService;
         }
 
-        // Yeni kategori oluşturma
+        // Kategori oluşturma
         [HttpPost]
         public async Task<IActionResult> Create(CategoryCreateDto categoryCreateDto)
         {
             var response = await _categoryService.CreateAsync(categoryCreateDto);
-            return CreateActionResult(response);
-        }
-
-        // Alt kategorilerle birlikte kategori oluşturma
-        [HttpPost]
-        public async Task<IActionResult> CreateWithSubCategories(CategoryCreateDto categoryCreateDto)
-        {
-            var response = await _categoryService.CreateWithSubCategoriesAsync(categoryCreateDto);
             return CreateActionResult(response);
         }
 
@@ -39,15 +35,36 @@ namespace EgeApp.Backend.API.Controllers
             return CreateActionResult(response);
         }
 
-        // Kategori silme
+        // // Kategori silme
+        // [HttpDelete("{id}")]
+        // public async Task<IActionResult> Delete(int id)
+        // {
+        //     var response = await _categoryService.DeleteAsync(id);
+        //     return CreateActionResult(response);
+        // }
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var response = await _categoryService.DeleteAsync(id);
-            return CreateActionResult(response);
-        }
 
-        // Tüm kategorileri listeleme
+            if (response.IsSucceeded)
+            {
+                return Ok(new ResponseDto<bool>
+                {
+                    Data = true,
+                    IsSucceeded = true,
+                    Error = null
+                });
+            }
+
+            return BadRequest(new ResponseDto<bool>
+            {
+                Data = false,
+                IsSucceeded = false,
+                Error = response.Error ?? "Silme işlemi başarısız."
+            });
+        }
+        // Tüm kategorileri getirme (Kategori Listesi için kullanılacak)
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -55,7 +72,14 @@ namespace EgeApp.Backend.API.Controllers
             return CreateActionResult(response);
         }
 
-        // Aktif/Pasif kategorileri listeleme
+        // ID'ye göre bir kategori getirme
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var response = await _categoryService.GetByIdAsync(id);
+            return CreateActionResult(response);
+        }
+
         [HttpGet("{isActive?}")]
         public async Task<IActionResult> GetActives(bool isActive = true)
         {
@@ -63,7 +87,6 @@ namespace EgeApp.Backend.API.Controllers
             return CreateActionResult(response);
         }
 
-        // Aktif/Pasif kategori sayısını alma
         [HttpGet("{isActive?}")]
         public async Task<IActionResult> GetActivesCount(bool isActive = true)
         {
@@ -71,20 +94,29 @@ namespace EgeApp.Backend.API.Controllers
             return CreateActionResult(response);
         }
 
-        // Toplam kategori sayısını alma
         [HttpGet]
         public async Task<IActionResult> GetCount()
         {
             var response = await _categoryService.GetCountAsync();
             return CreateActionResult(response);
         }
-
-        // Kategori ID ile alt kategorileri de içeren detay getir
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetCategoryWithSubCategories(int id)
+        [HttpGet]
+        public async Task<IActionResult> GetHomeCategories()
         {
-            var response = await _categoryService.GetByIdAsync(id); // Gerekirse ayrı bir metod eklenebilir.
-            return CreateActionResult(response);
+            var response = await _categoryService.GetHomeCategoriesAsync();
+            return StatusCode(response.StatusCode, response);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPagedCategories(int pageIndex, int pageSize)
+        {
+            var response = await _categoryService.GetPagedCategoriesAsync(pageIndex, pageSize);
+            return StatusCode(response.StatusCode, response);
+        }
+
+
+
+
+
     }
 }

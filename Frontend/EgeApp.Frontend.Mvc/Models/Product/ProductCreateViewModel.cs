@@ -8,38 +8,57 @@ namespace EgeApp.Frontend.Mvc.Models.Product;
 public class ProductCreateViewModel
 {
     [JsonPropertyName("name")]
-    [Display(Name = "Ürün Adı")]
-    [Required(ErrorMessage = "Bu alan boş bırakılamaz!")]
+    [Required(ErrorMessage = "Ürün adı gereklidir.")]
     public string Name { get; set; }
 
-    [JsonPropertyName("isActive")]
-    [Display(Name = "Aktif mi?")]
-    public bool IsActive { get; set; } = true;
-
-    [JsonPropertyName("properties")]
-    [Display(Name = "Özellikler")]
-    [Required(ErrorMessage = "Bu alan boş bırakılamaz!")]
-    public string Properties { get; set; }
+    [JsonPropertyName("description")]
+    public string Description { get; set; }
 
     [JsonPropertyName("price")]
-    [Display(Name = "Fiyat")]
-    [Required(ErrorMessage = "Bu alan boş bırakılamaz!")]
-    public decimal? Price { get; set; }
+    [Required(ErrorMessage = "Fiyat gereklidir.")]
+    public decimal Price { get; set; }
+
+    [JsonPropertyName("discountedPrice")]
+    public decimal? DiscountedPrice { get; set; }
 
     [JsonPropertyName("imageUrl")]
     public string ImageUrl { get; set; }
 
-    [JsonPropertyName("isHome")]
-    [Display(Name = "Anasayfa Ürünü mü?")]
-    public bool IsHome { get; set; }
+    [JsonPropertyName("isActive")]
+    public bool IsActive { get; set; } = true;
 
-    [JsonPropertyName("categoryId")]
+    [JsonPropertyName("warrantyPeriod")]
+    public string WarrantyPeriod { get; set; }
+
+    [JsonPropertyName("isDiscounted")]
+    public bool IsDiscounted { get; set; }
+
+    [JsonPropertyName("isFreeShipping")]
+    public bool IsFreeShipping { get; set; }
+
+    [JsonPropertyName("isSpecialProduct")]
+    public bool IsSpecialProduct { get; set; }
+
+    [JsonPropertyName("isSameDayShipping")]
+    public bool IsSameDayShipping { get; set; }
+
+    [JsonPropertyName("CategoryId")]
+    [Required(ErrorMessage = "Kategori seçilmelidir.")]
     public int CategoryId { get; set; }
 
-    [Display(Name = "Kategori seç")]
-    public List<SelectListItem> Categories { get; set; }
-    [Display(Name = "Ürün Resmi")]
-    [Required(ErrorMessage = "Resim seçmeden ürün kaydedemezsiniz!")]
-    public IFormFile Image { get; set; }
+    [JsonPropertyName("url")]
+    public string Url { get; set; }
 
+    [JsonPropertyName("brand")]
+    public string Brand { get; set; }
+
+    [JsonPropertyName("isHome")]
+    public bool IsHome { get; set; }
+   
+
+    [JsonPropertyName("categoryList")]
+    public IEnumerable<SelectListItem> CategoryList { get; set; }
+
+    [JsonIgnore]
+    public IFormFile Image { get; set; }
 }

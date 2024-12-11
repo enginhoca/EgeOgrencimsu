@@ -1,6 +1,7 @@
 using System;
 using EgeApp.Backend.Data.Abstract;
 using EgeApp.Backend.Entity.Concrete;
+using Microsoft.EntityFrameworkCore;
 
 namespace EgeApp.Backend.Data.Concrete.Repositories
 {
@@ -8,6 +9,16 @@ namespace EgeApp.Backend.Data.Concrete.Repositories
     {
         public CartRepository(AppDbContext dbContext) : base(dbContext)
         {
+        }
+    
+
+
+        public async Task<Cart> GetCartAsync(string userId)
+        {
+            return await _dbContext.Carts
+         .Include(cart => cart.CartItems)
+         .ThenInclude(item => item.Product) // Ürün bilgilerini yükle
+         .FirstOrDefaultAsync(cart => cart.UserId == userId);
         }
     }
 }

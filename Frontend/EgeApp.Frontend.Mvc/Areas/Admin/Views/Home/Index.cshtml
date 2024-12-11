@@ -1,72 +1,137 @@
 ﻿@{
-  ViewData["PageHeader"] = "Admin Panel Anasayfa";
+  ViewData["PageHeader"] = "Yönetim Paneli - Ana Sayfa";
   ViewData["ShowButton"] = false;
   ViewData["ButtonTitle"] = "";
   ViewData["ButtonLink"] = "";
 }
-
-
-<!-- Small boxes (Stat box) -->
-<div class="row">
-  <div class="col-lg-3 col-6">
-    <!-- small box -->
-    <div class="small-box bg-info">
-      <div class="inner">
-        <h3>150</h3>
-
-        <p>New Orders</p>
+<section class="content">
+  <div class="container-fluid">
+    <!-- Dashboard Cards -->
+    <div class="row">
+      <!-- Siparişler -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-info">
+              <i class="ion ion-bag fa-3x"></i>
+            </div>
+            <h5 class="card-title">Siparişler</h5>
+            <p class="card-text">Mevcut siparişlere hızlı erişim sağlayın.</p>
+            <a href="@Url.Action("Index", "Order", new { area = "Admin" })" class="btn btn-outline-info btn-sm">
+              Siparişleri İncele
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="icon">
-        <i class="ion ion-bag"></i>
+      <!-- Ürünler -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-success">
+              <i class="ion ion-cube fa-3x"></i>
+            </div>
+            <h5 class="card-title">Ürünler</h5>
+            <p class="card-text">Tüm ürünlere göz at ve düzenle.</p>
+            <a href="@Url.Action("Index", "Product", new { area = "Admin" })" class="btn btn-outline-success btn-sm">
+              Ürünlere Göz At
+            </a>
+          </div>
+        </div>
       </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+      <!-- Kategoriler -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-warning">
+              <i class="ion ion-folder fa-3x"></i>
+            </div>
+            <h5 class="card-title">Kategoriler</h5>
+            <p class="card-text">Ürün kategorilerini yönetin.</p>
+            <a href="@Url.Action("Index", "Category", new { area = "Admin" })" class="btn btn-outline-warning btn-sm">
+              Kategorilere Git
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Kullanıcılar -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-danger">
+              <i class="ion ion-person fa-3x"></i>
+            </div>
+            <h5 class="card-title">Kullanıcılar</h5>
+            <p class="card-text">Tüm kullanıcı bilgilerini kontrol edin.</p>
+            <a href="@Url.Action("Index", "User", new { area = "Admin" })" class="btn btn-outline-danger btn-sm">
+              Kullanıcıları Gör
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Roller -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-primary">
+              <i class="ion ion-key fa-3x"></i>
+            </div>
+            <h5 class="card-title">Roller</h5>
+            <p class="card-text">Yetkilendirme ve roller üzerinde çalışın.</p>
+            <a href="@Url.Action("Index", "Role", new { area = "Admin" })" class="btn btn-outline-primary btn-sm">
+              Rolleri Yönet
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Anasayfa Ürünleri -->
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body text-center">
+            <div class="icon mb-3 text-secondary">
+              <i class="ion ion-home fa-3x"></i>
+            </div>
+            <h5 class="card-title">Anasayfa Ürünleri</h5>
+            <p class="card-text">Anasayfa ürünlerini inceleyin ve düzenleyin.</p>
+            <a href="@Url.Action("GetHomes", "Home", new { area = "Admin" })"
+              class="btn btn-outline-secondary btn-sm">İncele</a>
+          </div>
+        </div>
+      </div>
+      </div>
     </div>
   </div>
-  <!-- ./col -->
-  <div class="col-lg-3 col-6">
-    <!-- small box -->
-    <div class="small-box bg-success">
-      <div class="inner">
-        <h3>53<sup style="font-size: 20px">%</sup></h3>
+</section>
 
-        <p>Bounce Rate</p>
-      </div>
-      <div class="icon">
-        <i class="ion ion-stats-bars"></i>
-      </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-    </div>
-  </div>
-  <!-- ./col -->
-  <div class="col-lg-3 col-6">
-    <!-- small box -->
-    <div class="small-box bg-warning">
-      <div class="inner">
-        <h3>44</h3>
+<style>
+  /* Genel Ayarlar */
+  .card {
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+  }
 
-        <p>User Registrations</p>
-      </div>
-      <div class="icon">
-        <i class="ion ion-person-add"></i>
-      </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-    </div>
-  </div>
-  <!-- ./col -->
-  <div class="col-lg-3 col-6">
-    <!-- small box -->
-    <div class="small-box bg-danger">
-      <div class="inner">
-        <h3>65</h3>
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
 
-        <p>Unique Visitors</p>
-      </div>
-      <div class="icon">
-        <i class="ion ion-pie-graph"></i>
-      </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-    </div>
-  </div>
-  <!-- ./col -->
-</div>
-<!-- /.row -->
+  .icon {
+    font-size: 50px;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .card-text {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 5px 20px;
+  }
+</style>

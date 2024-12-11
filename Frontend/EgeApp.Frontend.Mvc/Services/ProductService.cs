@@ -12,6 +12,7 @@ namespace EgeApp.Frontend.Mvc.Services;
 
 public static class ProductService
 {
+    private static readonly string BaseUrl = "http://localhost:5200/api/Products";
     public static async Task<ResponseModel<List<ProductViewModel>>> GetHomesAsync(bool isHome = true)
     {
         using (HttpClient httpClient = new())
@@ -78,7 +79,7 @@ public static class ProductService
         }
 
     }
-    public static async Task<ResponseModel<NoContent>> UpdateAsync(ProductEditViewModel model)
+    public static async Task<ResponseModel<NoContent>> UpdateAsync(ProductUpdateViewModel model)
     {
         using (HttpClient httpClient = new())
         {
@@ -106,7 +107,7 @@ public static class ProductService
                     }
                 }
             }
-
+            model.CategoryId = 1;
             //Ürün Güncelleme işlemini yapıyoruz
             var serializeModel = JsonConvert.SerializeObject(model);
             var stringContent = new StringContent(serializeModel, Encoding.UTF8, "application/json");
@@ -167,6 +168,84 @@ public static class ProductService
                 result.IsSucceeded = response.IsSucceeded;
             }
             return result;
+        }
+
+    }
+    public static async Task<ResponseModel<List<ProductViewModel>>> GetDiscountedProductsAsync()
+    {
+        try
+        {
+            using (HttpClient httpClient = new())
+            {
+                httpClient.BaseAddress = new Uri(BaseUrl);
+
+                var response = await httpClient.GetAsync("http://localhost:5200/api/Products/GetDiscountedProducts/GetDiscountedProducts");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorDetails = await response.Content.ReadAsStringAsync();
+                    return new ResponseModel<List<ProductViewModel>>
+                    {
+                        IsSucceeded = false,
+                        Error = $"API Error: {response.StatusCode} - {response.ReasonPhrase}, Details: {errorDetails}"
+                    };
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<ResponseModel<List<ProductViewModel>>>(content);
+
+                return result ?? new ResponseModel<List<ProductViewModel>>
+                {
+                    IsSucceeded = false,
+                    Error = "Received null or invalid data from API."
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new ResponseModel<List<ProductViewModel>>
+            {
+                IsSucceeded = false,
+                Error = $"Exception occurred: {ex.Message}"
+            };
+        }
+    }
+
+    public static async Task<ResponseModel<List<ProductViewModel>>> GetBestSellersAsync(int topCount)
+    {
+        try
+        {
+            using (HttpClient httpClient = new())
+            {
+                httpClient.BaseAddress = new Uri(BaseUrl);
+
+                var response = await httpClient.GetAsync($"http://localhost:5200/api/Products/GetBestSellers/GetBestSellers/{topCount}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorDetails = await response.Content.ReadAsStringAsync();
+                    return new ResponseModel<List<ProductViewModel>>
+                    {
+                        IsSucceeded = false,
+                        Error = $"API Error: {response.StatusCode} - {response.ReasonPhrase}, Details: {errorDetails}"
+                    };
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<ResponseModel<List<ProductViewModel>>>(content);
+
+                return result ?? new ResponseModel<List<ProductViewModel>>
+                {
+                    IsSucceeded = false,
+                    Error = "Received null or invalid data from API."
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new ResponseModel<List<ProductViewModel>>
+            {
+                IsSucceeded = false,
+                Error = $"Exception occurred: {ex.Message}"
+            };
         }
     }
 }

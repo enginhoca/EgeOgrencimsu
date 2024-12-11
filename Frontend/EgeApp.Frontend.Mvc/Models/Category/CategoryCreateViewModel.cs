@@ -1,17 +1,29 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EgeApp.Frontend.Mvc.Models.Category
 {
     public class CategoryCreateViewModel
     {
-        public bool IsMainCategory { get; set; }
-        public List<SelectListItem> Categories { get; set; }  // Bu, alt kategori seçiminde kullanılıyor.
+        [JsonPropertyName("name")]
+        [Required(ErrorMessage = "Kategori adı gereklidir.")]
         public string Name { get; set; }
+
+        [JsonPropertyName("isActive")]
+        public bool IsActive { get; set; } = true;
+
+        [JsonPropertyName("description")]
         public string Description { get; set; }
-        public bool IsActive { get; set; }
-        public int? ParentCategoryId { get; set; }
-        public string Url { get; set; }
+
+        [JsonPropertyName("imageUrl")]
+        [Display(Name = "Kategori Resmi")]
+        public string ImageUrl { get; set; }
+        [JsonPropertyName("isHome")]
+        public bool IsHome { get; set; }
+
+
+        [JsonIgnore]
         public IFormFile Image { get; set; }
     }
 }

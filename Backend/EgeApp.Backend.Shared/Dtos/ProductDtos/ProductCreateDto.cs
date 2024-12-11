@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using EgeApp.Backend.Shared.Dtos.CategoryDtos;
 
 namespace EgeApp.Backend.Shared.Dtos.ProductDtos
 {
@@ -12,7 +13,6 @@ namespace EgeApp.Backend.Shared.Dtos.ProductDtos
         public decimal? DiscountedPrice { get; set; }  // İndirimli fiyat
         public string ImageUrl { get; set; }  // Resim URL'si
         public bool IsActive { get; set; } = true;  // Varsayılan: aktif
-        public string? StockCode { get; set; }  // Stok kodu
         public string? WarrantyPeriod { get; set; }  // Garanti süresi
         public bool IsDiscounted { get; set; }  // İndirimli mi?
         public bool? IsFreeShipping { get; set; }  // Ücretsiz kargo mu?
@@ -23,11 +23,8 @@ namespace EgeApp.Backend.Shared.Dtos.ProductDtos
         public string? Brand { get; set; }  // Marka
         public bool IsHome { get; set; }  // Ana sayfa ürünü mü?
         [Required]
-        public int ProductCategoryId { get; set; }  // Kategori ID
-        public bool? PrescriptionRequired { get; set; }  // Reçete gerekli mi?
-        public DateTime? ManufacturingDate { get; set; }  // Üretim tarihi
-        public DateTime? ExpirationDate { get; set; }  // SKT
-        public string? StorageConditions { get; set; }  // Saklama koşulları
-        public string? UsageInstructions { get; set; }  // Kullanım talimatları
+        public int CategoryId { get; set; }  // Seçili kategori ID
+        public IEnumerable<CategoryDto>? Categories { get; set; }  // Kategori listesi
     }
+
 }

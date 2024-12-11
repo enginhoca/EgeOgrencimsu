@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EgeApp.Frontend.Mvc.Models.Category;
 using EgeApp.Frontend.Mvc.Services;
+using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EgeApp.Frontend.Mvc.Areas.Admin.Controllers
 {
@@ -25,79 +24,175 @@ namespace EgeApp.Frontend.Mvc.Areas.Admin.Controllers
         public async Task<IActionResult> Index()
         {
             var response = await CategoryService.GetAllAsync();
-
-            if (!response.IsSucceeded)
-            {
-                TempData["Error"] = response.Error;
-                return Redirect("/home/error");
-            }
-
-            var categories = response.Data;
-
-
-
-            return View(categories);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Create(bool isMainCategory = true)
-        {
-            var response = await CategoryService.GetAllAsync();
-
             if (!response.IsSucceeded)
             {
                 TempData["Error"] = response.Error;
                 return RedirectToAction("Error", "Home");
             }
 
-            var categories = response.Data;
+            return View(response.Data);
+        }
 
-            // CategoryCreateViewModel oluşturuluyor
-            var model = new CategoryCreateViewModel
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new CategoryCreateViewModel { IsActive = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CategoryCreateViewModel model)
+        {
+            if (!ModelState.IsValid)
             {
-                IsMainCategory = isMainCategory,
-                Categories = categories
-                    .Select(c => new SelectListItem
+                _notyfService.Error("Lütfen tüm bilgileri doğru şekilde doldurun.");
+                return View(model);
+            }
+
+            if (model.Image != null)
+            {
+                try
+                {
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.Image.FileName)}";
+                    var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/categories", fileName);
+
+                    using (var stream = new FileStream(savePath, FileMode.Create))
                     {
-                        Text = c.Name,
-                        Value = c.Id.ToString()
-                    })
-                    .ToList() // Listeye dönüştürülüyor
+                        await model.Image.CopyToAsync(stream);
+                    }
+
+                    model.ImageUrl = $"/uploads/categories/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    _notyfService.Error($"Görsel yüklenirken hata oluştu: {ex.Message}");
+                    return View(model);
+                }
+            }
+
+            var result = await CategoryService.CreateAsync(model);
+            if (!result.IsSucceeded)
+            {
+                _notyfService.Error(result.Error ?? "Kategori oluşturulamadı.");
+                return View(model);
+            }
+
+            _notyfService.Success("Kategori başarıyla oluşturuldu.");
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Update(int id)
+        {
+            if (id <= 0)
+            {
+                _notyfService.Error("Geçersiz kategori ID'si.");
+                return RedirectToAction("Index");
+            }
+
+            var response = await CategoryService.GetByIdAsync(id);
+            if (!response.IsSucceeded || response.Data == null)
+            {
+                _notyfService.Error(response.Error ?? "Kategori bulunamadı.");
+                return RedirectToAction("Index");
+            }
+
+            var model = new CategoryUpdateViewModel
+            {
+                Id = response.Data.Id,
+                Name = response.Data.Name,
+                Description = response.Data.Description,
+                IsActive = response.Data.IsActive,
+                IsHome = response.Data.IsHome,
+                ImageUrl = response.Data.ImageUrl
             };
 
+            // Başarı mesajını yalnızca güncelleme sonrası göstermek için kontrol et
+            ViewBag.SuccessMessage = TempData["SuccessMessage"];
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CategoryCreateViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(CategoryUpdateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Eğer alt kategori ise ParentCategoryId ayarlanır
-                model.ParentCategoryId = model.IsMainCategory ? 0 : model.ParentCategoryId;
+                _notyfService.Error("Lütfen tüm bilgileri doğru şekilde doldurun.");
+                return View(model);
+            }
 
-                var result = await CategoryService.CreateAsync(model);
-                if (!result.IsSucceeded)
+            if (model.Image != null)
+            {
+                try
                 {
-                    TempData["Error"] = result.Error;
-                    return Redirect("/home/error");
-                }
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.Image.FileName)}";
+                    var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/categories", fileName);
 
-                _notyfService.Success("Kategori başarıyla oluşturuldu");
+                    using (var stream = new FileStream(savePath, FileMode.Create))
+                    {
+                        await model.Image.CopyToAsync(stream);
+                    }
+
+                    model.ImageUrl = $"/uploads/categories/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    _notyfService.Error($"Görsel yüklenirken hata oluştu: {ex.Message}");
+                    return View(model);
+                }
+            }
+            
+            var result = await CategoryService.UpdateAsync(model);
+            if (!result.IsSucceeded)
+            {
+                _notyfService.Error(result.Error ?? "Kategori güncellenemedi.");
+                return View(model);
+            }
+
+            _notyfService.Success("Kategori başarıyla güncellendi");
+            return RedirectToAction("Index");
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                _notyfService.Error("Geçersiz kategori ID'si.");
                 return RedirectToAction("Index");
             }
 
-            // Model geçersizse, kategori dropdown'ı tekrar dolduruluyor
-            var categories = await CategoryService.GetAllAsync();
-            model.Categories = categories.Data
-                .Select(c => new SelectListItem
-                {
-                    Text = c.Name,
-                    Value = c.Id.ToString()
-                })
-                .ToList();
+            var response = await CategoryService.GetByIdAsync(id);
+            if (!response.IsSucceeded || response.Data == null)
+            {
+                _notyfService.Error(response.Error ?? "Kategori bulunamadı.");
+                return RedirectToAction("Index");
+            }
 
-            return View(model);
+            return View(response.Data);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmDelete(int id)
+        {
+            if (id <= 0)
+            {
+                _notyfService.Error("Geçersiz kategori ID'si.");
+                return RedirectToAction("Index");
+            }
+
+            var response = await CategoryService.DeleteAsync(id);
+            if (!response.IsSucceeded)
+            {
+                _notyfService.Error(response.Error ?? "Kategori silinemedi.");
+                return RedirectToAction("Index");
+            }
+
+            _notyfService.Success("Kategori başarıyla silindi.");
+            return RedirectToAction("Index");
         }
     }
 }

@@ -1,120 +1,79 @@
 ﻿@model EgeApp.Frontend.Mvc.Models.Identity.RoleAssignViewModel
 @{
-    ViewData["PageHeader"] = Model.Role.Name + " Rolüne Kullanıcı Atama";
+    ViewData["PageHeader"] = "";
     ViewData["ShowButton"] = false;
     ViewData["ButtonTitle"] = "";
     ViewData["ButtonLink"] = "";
+    ViewData["Title"] = $"{Model.Role.Name} için Kullanıcı Yönetimi";
 }
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h2 class="text-uppercase fw-bold mb-4" style="color: #002855;">@Model.Role.Name için Kullanıcı Yönetimi</h2>
+        <p class="text-muted">Bu sayfadan kullanıcıları role ekleyebilir veya çıkarabilirsiniz.</p>
+    </div>
 
-<form asp-area="Admin" asp-controller="Role" asp-action="Edit" method="post">
-    <input type="hidden" asp-for="@Model.Role.Id" name="RoleId" />
-    <div class="card">
-        <div class="card-body">
-            <div class="row w-75 m-auto">
-                <div class="col-md-6">
-                    <h6 class="bg-danger text-white p-3">Role Sahip Olmayan Üyeler</h6>
-                    <p class="mb-0"><span class="text-danger">@Model.Role.Name</span> rolüne atamak istediğiniz
-                        kullanıcıları seçin.
-                    </p>
-                    <div class="px-4">
-                        <input class="form-check-input" id="select-all-nonmembers" type="checkbox" />
-                        <label class="form-check-label" for="select-all-nonmembers"> Tümünü Seç</label>
-                    </div>
-                    @if (Model.NonMembers.Count == 0)
-                    {
-                        <div class="alert alert-warning">
-                            <span>Üye bulunamadı!</span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="card">
-                            <div class="card-body">
-                                @foreach (var user in Model.NonMembers)
-                                {
-                                    <div class="form-check">
-                                        <input id="user-@user.Id" type="checkbox" class="form-check-input nonmember"
-                                            name="IdsAdd" value="@user.Id" />
-                                        <label for="user-@user.Id" class="form-check-label">@user.UserName</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
+    <div class="row g-4">
+        <!-- Role Dahil Kullanıcılar -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white" style="background-color: #820b15;">
+                    <h4 class="mb-0">Role Dahil Kullanıcılar</h4>
                 </div>
-                <div class="col-md-6">
-                    <h6 class="bg-success text-white p-3">Role Sahip Olan Üyeler</h6>
-                    <p class="mb-0"><span class="text-danger">@Model.Role.Name </span>rolünden çıkarmak istediğiniz
-                        kullanıcıları seçin.</p>
-                    <div class="px-4">
-                        <input class="form-check-input" id="select-all-members" type="checkbox" />
-                        <label class="form-check-label" for="select-all-members"> Tümünü Seç</label>
-                    </div>
-                    @if (Model.Members.Count == 0)
-                    {
-                        <div class="alert alert-warning">
-                            <span>Üye bulunamadı!</span>
+                <div class="card-body">
+                    <form asp-action="RemoveUsersFromRole" method="post">
+                        <input type="hidden" name="roleId" value="@Model.RoleId" />
+                        <ul class="list-group list-group-flush">
+                            @foreach (var member in Model.Members)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>@member.UserName</span>
+                                    <input type="checkbox" name="userIdsToRemove" value="@member.Id" />
+                                </li>
+                            }
+                        </ul>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn text-white fw-bold"
+                                style="background-color: #8a0611;">Seçilenleri Rolünden Çıkar</button>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="card">
-                            <div class="card-body">
-                                @foreach (var user in Model.Members)
-                                {
-                                    <div class="form-check">
-                                        <input id="user-@user.Id" type="checkbox" class="form-check-input member"
-                                            name="IdsRemove" value="@user.Id" />
-                                        <label for="user-@user.Id" class="form-check-label">@user.UserName</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
+                    </form>
                 </div>
-                <div class="col-md-12">
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-block">Değişiklikleri Kaydet</button>
-                    </div>
+            </div>
+        </div>
+
+        <!-- Role Dahil Olmayan Kullanıcılar -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white" style="background-color: #002855;">
+                    <h4 class="mb-0">Role Dahil Olmayan Kullanıcılar</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddUsersToRole" method="post">
+                        <input type="hidden" name="roleId" value="@Model.RoleId" />
+                        <ul class="list-group list-group-flush">
+                            @foreach (var nonMember in Model.NonMembers)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>@nonMember.UserName</span>
+                                    <input type="checkbox" name="userIdsToAdd" value="@nonMember.Id" />
+                                </li>
+                            }
+                        </ul>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn text-white fw-bold"
+                                style="background-color: #002855;">Seçilenleri Role Ekle</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</form>
 
-@section Scripts {
-    <script>
-        const selectAllNonMembers = document.getElementById('select-all-nonmembers');
-        selectAllNonMembers.addEventListener('change', function () {
-
-            const nonMembers = document.querySelectorAll(".nonmember");
-
-            for (let i = 0; i < nonMembers.length; i++) {
-                if (selectAllNonMembers.checked) {
-                    nonMembers[i].checked = true;
-                } else {
-                    nonMembers[i].checked = false;
-                }
-
-            }
-        });
-
-        const selectAllMembers = document.getElementById('select-all-members');
-        selectAllMembers.addEventListener('change', function () {
-
-            const members = document.querySelectorAll(".member");
-
-            for (let i = 0; i < members.length; i++) {
-                if (selectAllMembers.checked) {
-                    members[i].checked = true;
-                } else {
-                    members[i].checked = false;
-                }
-
-            }
-        });
-
-
-
-    </script>
-}
+    <!-- Alt Butonlar -->
+    <div class="mt-5 text-end">
+        <div class="d-inline-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">Vazgeç</a>
+            <button form="updateRoleForm" type="submit" class="btn text-white fw-bold"
+                style="background-color: #8a0611;">Değişiklikleri Kaydet</button>
+        </div>
+    </div>
+</div>

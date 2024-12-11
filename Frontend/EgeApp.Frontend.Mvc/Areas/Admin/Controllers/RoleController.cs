@@ -29,69 +29,138 @@ namespace EgeApp.Frontend.Mvc.Areas.Admin.Controllers
             return View(roles);
         }
 
-        [NonAction]
-        public async Task<RoleAssignViewModel> InitializeUsers(string id)
+        public async Task<IActionResult> Edit(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                _notyfService.Error("Rol ID'si eksik veya geçersiz.");
+                return RedirectToAction("Index");
+            }
+
             var role = await _roleManager.FindByIdAsync(id);
+            if (role == null)
+            {
+                _notyfService.Error("Rol bulunamadı.");
+                return RedirectToAction("Index");
+            }
+
             var users = await _userManager.Users.ToListAsync();
-            List<AppUser> members = [];
-            List<AppUser> nonMembers = [];
+            var members = new List<AppUser>();
+            var nonMembers = new List<AppUser>();
+
             foreach (var user in users)
             {
-                var list = await _userManager.IsInRoleAsync(user, role.Name)
-                            ? members
-                            : nonMembers;
+                var list = await _userManager.IsInRoleAsync(user, role.Name) ? members : nonMembers;
                 list.Add(user);
             }
-            RoleAssignViewModel model = new()
+
+            var model = new RoleAssignViewModel
             {
+                RoleId = role.Id,
                 Role = role,
                 Members = members,
                 NonMembers = nonMembers
             };
-            return model;
-        }
 
-        public async Task<IActionResult> Edit(string id)
-        {
-            var model = await InitializeUsers(id);
             return View(model);
         }
+
         [HttpPost]
         public async Task<IActionResult> Edit(RoleAssignViewModel model)
         {
-            model.Role = await _roleManager.FindByIdAsync(model.RoleId);
-            //İlgili role seçilen kullanıcıları ekliyoruz
-            foreach (var userId in model.IdsAdd ?? [])
+            if (string.IsNullOrEmpty(model.RoleId))
+            {
+                _notyfService.Error("Rol ID'si eksik veya gönderilmedi.");
+                return RedirectToAction("Index");
+            }
+
+            var role = await _roleManager.FindByIdAsync(model.RoleId);
+            if (role == null)
+            {
+                _notyfService.Error("Rol bulunamadı.");
+                return RedirectToAction("Index");
+            }
+
+            foreach (var userId in model.IdsAdd ?? new List<string>())
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                var result = await _userManager.AddToRoleAsync(user, model.Role.Name);
+                if (user == null)
+                {
+                    _notyfService.Error($"Kullanıcı bulunamadı: {userId}");
+                    continue;
+                }
+
+                var result = await _userManager.AddToRoleAsync(user, role.Name);
                 if (!result.Succeeded)
                 {
-                    _notyfService.Error(result.Errors.ToList()[0].Description);
-                    var resultModel = await InitializeUsers(model.RoleId);
-                    resultModel.IdsAdd = model.IdsAdd;
-                    resultModel.IdsRemove = model.IdsRemove;
-                    return View(resultModel);
+                    foreach (var error in result.Errors)
+                    {
+                        _notyfService.Error(error.Description);
+                    }
                 }
             }
-            //İlgili rolden çıkarılan kullanıcıları siliyoruz
-            foreach (var userId in model.IdsRemove ?? [])
+
+            foreach (var userId in model.IdsRemove ?? new List<string>())
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                var result = await _userManager.RemoveFromRoleAsync(user, model.Role.Name);
+                if (user == null)
+                {
+                    _notyfService.Error($"Kullanıcı bulunamadı: {userId}");
+                    continue;
+                }
+
+                var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
                 if (!result.Succeeded)
                 {
-                    _notyfService.Error(result.Errors.ToList()[0].Description);
-                    var resultModel2 = await InitializeUsers(model.RoleId);
-                    resultModel2.IdsAdd = model.IdsAdd;
-                    resultModel2.IdsRemove = model.IdsRemove;
-                    return View(resultModel2);
+                    foreach (var error in result.Errors)
+                    {
+                        _notyfService.Error(error.Description);
+                    }
                 }
             }
-            _notyfService.Success("Rol/Kullanıcı Atama değişiklikleri başarıyla uygulandı!");
-            var resultModel3 = await InitializeUsers(model.RoleId);
-            return View(resultModel3);
+
+            _notyfService.Success("Rol/Kullanıcı atama işlemleri başarıyla tamamlandı.");
+            return RedirectToAction("Index");
+        }
+
+        // Yeni Metot: Kullanıcıları Rolden Çıkarma
+        [HttpPost]
+        public async Task<IActionResult> RemoveUsersFromRole(string roleId, List<string> userIdsToRemove)
+        {
+            if (string.IsNullOrEmpty(roleId))
+            {
+                _notyfService.Error("Rol ID'si eksik.");
+                return RedirectToAction("Index");
+            }
+
+            var role = await _roleManager.FindByIdAsync(roleId);
+            if (role == null)
+            {
+                _notyfService.Error("Rol bulunamadı.");
+                return RedirectToAction("Index");
+            }
+
+            foreach (var userId in userIdsToRemove ?? new List<string>())
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    _notyfService.Error($"Kullanıcı bulunamadı: {userId}");
+                    continue;
+                }
+
+                var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        _notyfService.Error(error.Description);
+                    }
+                }
+            }
+
+            _notyfService.Success("Kullanıcılar başarıyla rolden çıkarıldı.");
+            return RedirectToAction("Edit", new { id = roleId });
         }
     }
 }

@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using EgeApp.Frontend.Mvc.Data.Entities;
 using EgeApp.Frontend.Mvc.Services;
+using EgeApp.Frontend.Mvc.Models.Product;
 
 namespace EgeApp.Frontend.Mvc.Controllers
 {
+
     public class ProductController : Controller
     {
         private readonly UserManager<AppUser> _userManager;
@@ -19,34 +21,87 @@ namespace EgeApp.Frontend.Mvc.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Gelecekte asenkron işlemler için yer bırakılmıştır.
-            await Task.CompletedTask;
-            return View();
-        }
+            var result = await ProductService.GetAllAsync();
+            if (!result.IsSucceeded)
+            {
+                TempData["Error"] = result.Error ?? "Ürünler yüklenirken bir hata oluştu.";
+                return RedirectToAction("Error", "Home");
+            }
 
+            return View(result.Data);
+        }
+        public IActionResult Shop()
+        {
+            return View(); 
+        }
         public async Task<IActionResult> Details(int id)
         {
             var result = await ProductService.GetByIdAsync(id);
+
             if (!result.IsSucceeded)
             {
-                _notyfService.Error(result.Error);
+                _notyfService.Error("Ürün detayları yüklenemedi.");
                 return RedirectToAction("Index");
             }
 
             if (User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.FindByNameAsync(User.Identity.Name);
-                var userId = user.Id;
-                var cartResult = await CartService.GetCartAsync(userId);
+                var cartResult = await CartService.GetCartAsync(user.Id);
+
                 if (!cartResult.IsSucceeded)
                 {
-                    _notyfService.Error(cartResult.Error);
+                    _notyfService.Error("Sepet bilgileri alınırken bir hata oluştu.");
                     return RedirectToAction("Index");
                 }
+
                 ViewBag.CountOfItems = cartResult.Data.CountOfItem;
             }
+
             return View(result.Data);
         }
+        [HttpGet("GetDiscountedProducts")]
+        public async Task<IActionResult> GetDiscountedProducts()
+        {
+            // Asenkron sonucu bekle
+            var discountedProducts = await ProductService.GetDiscountedProductsAsync();
+
+            // Hata kontrolü
+            if (discountedProducts == null || !discountedProducts.IsSucceeded || discountedProducts.Data == null || !discountedProducts.Data.Any())
+            {
+                return NotFound("No discounted products found.");
+            }
+
+            // Başarılı sonuç döndür
+            return Ok(discountedProducts.Data);
+        }
+
+        public async Task<IActionResult> ProductList()
+        {
+            var response = await ProductService.GetAllAsync();
+
+            // Eğer response başarılıysa ve ürünler varsa işlemleri gerçekleştir
+            if (response != null && response.Data != null)
+            {
+                var products = response.Data
+                    .Select(p => new ProductListViewModel
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        ImageUrl = p.ImageUrl,
+                        Price = p.Price,
+                        DiscountedPrice = p.DiscountedPrice,
+                        IsActive = p.IsActive,
+                        IsFreeShipping = p.IsFreeShipping
+                    }).ToList();
+
+                return View(products);
+            }
+
+            // Eğer veri yoksa veya hata varsa, hata sayfasına yönlendirin veya uygun bir yanıt döndürün
+            return View(new List<ProductListViewModel>());
+        }
+
 
     }
 }
